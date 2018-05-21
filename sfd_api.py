@@ -48,7 +48,7 @@ class SDF_API:
         cap = cv2.VideoCapture()
         r = cap.open(video_file)
 
-        fp = open("sfd_detects.txt", 'w')
+        # fp = open("sfd_detects.txt", 'w')
 
         if not r:
             return
@@ -76,7 +76,7 @@ class SDF_API:
 
             self.pid += 1
 
-        fp.close()
+        # fp.close()
 
 
 if __name__ == '__main__':

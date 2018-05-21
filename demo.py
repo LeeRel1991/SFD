@@ -30,6 +30,7 @@ import caffe
 
 caffe.set_device(0)
 caffe.set_mode_gpu()
+# caffe.set_mode_cpu()
 model_def = './models/VGGNet/WIDER_FACE/SFD_trained/deploy.prototxt'
 model_weights = './models/VGGNet/WIDER_FACE/SFD_trained/SFD.caffemodel'
 sfd = caffe.Net(model_def, model_weights, caffe.TEST)
