@@ -31,6 +31,12 @@ class SFD:
         caffe.set_mode_gpu()
 
         self.net = caffe.Net(model_def, model_weights, caffe.TEST)
+        self.transformer = caffe.io.Transformer({'data': self.net.blobs['data'].data.shape})
+        self.transformer.set_transpose('data', (2, 0, 1))
+        self.transformer.set_mean('data', np.array([104, 117, 123]))
+        self.transformer.set_raw_scale('data', 255)
+        self.transformer.set_channel_swap('data', (2, 1, 0))
+
         self.conf_thresh = conf_thresh
         self.img_max_side = img_max_side
 
@@ -39,6 +45,7 @@ class SFD:
         self.img_max_side = img_max_side
 
     def detect(self, img_arr):
+        tic = time.time()
         heigh = img_arr.shape[0]
         width = img_arr.shape[1]
 
@@ -47,14 +54,11 @@ class SFD:
         image = cv2.resize(img_arr, None, None, fx=im_shrink, fy=im_shrink, interpolation=cv2.INTER_LINEAR)
 
         # print("in size: ", image.shape)
+        # print("data shape: ", self.net.blobs['data'].data.shape)
         self.net.blobs['data'].reshape(1, 3, image.shape[0], image.shape[1])
+        # print("data shape: ", self.net.blobs['data'].data.shape)
 
-        self.transformer = caffe.io.Transformer({'data': self.net.blobs['data'].data.shape})
-        self.transformer.set_transpose('data', (2, 0, 1))
-        self.transformer.set_mean('data', np.array([104, 117, 123]))
-        self.transformer.set_raw_scale('data', 255)
-        self.transformer.set_channel_swap('data', (2, 1, 0))
-
+        self.transformer.inputs['data'] = self.net.blobs['data'].data.shape
         transformed_image = self.transformer.preprocess('data', image.astype(np.float32))
 
         # print("preprocess time: ", time.time() - tic)
@@ -70,13 +74,16 @@ class SFD:
         thresh_pos = np.where(detections_out[:, 0] >= self.conf_thresh)[0]
         detections_out = detections_out[thresh_pos, :]
 
-        if detections_out.shape[0] > 4:
-            print("qqqqqqqqqqq")
         detections_out[:, 1:5] = np.maximum(detections_out[:, 1:5], 0)
         detections_out[:, 1:5] = np.minimum(detections_out[:, 1:5], 1)
+
+        # remove extremely small faces of 0 width or height, which possibly are mistakes
+        need_rm_idx = [id for id, x in enumerate(detections_out[:, 1:]) if x[2] - x[0] <= 0 or x[3] - x[1] <= 0]
+        detections_out = np.delete(detections_out, need_rm_idx, 0)
         detections_out[:, (1, 3)] *= width
         detections_out[:, (2, 4)] *= heigh
 
+        # print("total time: ", time.time() - tic)
         return detections_out
 
     def detect_batch(self, imgs):
