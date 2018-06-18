@@ -13,7 +13,8 @@
 """
 import cv2
 import time
-
+import sys
+sys.path.append("./core")
 from sfd import SFD
 import numpy as np
 import os
@@ -75,7 +76,7 @@ class IOUTracker:
 
         updated_tracks = []
 
-        tmp = self.tracks_active+self.last_nonupt_tracks
+        tmp = self.tracks_active + self.last_nonupt_tracks
         self.last_nonupt_tracks = []
         for track in self.tracks_active:
             if len(dets) > 0:
@@ -100,7 +101,9 @@ class IOUTracker:
 
         # create new tracks
 
-        new_tracks = [{'bboxes': [det['bbox']], 'max_score': det['score'], 'start_frame': frame_num, 'ID': i + self.total_num} for i, det in enumerate(dets, start=1)]
+        new_tracks = [
+            {'bboxes': [det['bbox']], 'max_score': det['score'], 'start_frame': frame_num, 'ID': i + self.total_num} for
+            i, det in enumerate(dets, start=1)]
         self.tracks_active = updated_tracks + new_tracks
         self.total_num += len(new_tracks)
         toc = time.time()
@@ -214,7 +217,7 @@ class SDF_API:
 
             self.pid += 1
 
-        # fp.close()
+            # fp.close()
 
     def detect_with_tracker(self, video_file):
         cap = cv2.VideoCapture()
@@ -248,12 +251,13 @@ class SDF_API:
             # print("bbox2 ", x1, y1, x2, y2)
             cv2.rectangle(self.img, (x1, y1), (x2, y2), (0, 255, 0), 4)
             cv2.putText(self.img, "ID: {}, score: {:.2f}, ".format(track['ID'], track['max_score']), (x1, y1),
-                    cv2.FONT_HERSHEY_PLAIN, 1.2, (255, 0, 0), 2)
+                        cv2.FONT_HERSHEY_PLAIN, 1.2, (255, 0, 0), 2)
 
         cv2.imshow("out", cv2.cvtColor(self.img.astype(np.uint8), cv2.COLOR_RGB2BGR))
         cv2.waitKey(1)
 
+
 if __name__ == '__main__':
-    api = SDF_API("./models/VGGNet/WIDER_FACE/SFD_trained")
+    api = SDF_API("./data")
     # api.process_video("/media/lirui/Program/Datas/Videos/2018-04-10-3member.mp4")
     api.detect_with_tracker("/media/lirui/Program/Datas/Videos/2018-04-10-3member.mp4")

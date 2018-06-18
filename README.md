@@ -6,87 +6,83 @@ By [Shifeng Zhang](http://www.cbsr.ia.ac.cn/users/sfzhang/)
 
 S³FD is a real-time face detector, which performs superiorly on various scales of faces with a single deep neural network, especially for small faces. For more details, please refer to our [arXiv paper](https://arxiv.org/abs/1708.05237).
 
+## Features
 
-### Contents
-1. [Preparation](#preparation)
-2. [Eval](#eval)
-3. [Train](#train)
+* real-time
+* cxx version can be seen in project [SFDCXX](http://gitlab.bmi/r.li/SFDCXX)
 
-### Preparation
-1. Get the [SSD](https://github.com/weiliu89/caffe/tree/ssd) code. We will call the directory that you cloned Caffe into `$SFD_ROOT`
-  ```Shell
-  git clone https://github.com/weiliu89/caffe.git
-  cd $SFD_ROOT
-  git checkout ssd
-  ```
+### Install
+```shell
+# 使用python虚拟环境
+sudo apt-get install python-virtualenv
+virtualenv -p /usr/bin/python3 py3venv
+source py3venv/bin/active
 
-2. Build the code. Please follow [Caffe instruction](http://caffe.berkeleyvision.org/installation.html) to install all necessary packages and build it.
-  ```Shell
-  # Modify Makefile.config according to your Caffe installation.
-  cp Makefile.config.example Makefile.config
-  make -j8
-  # Make sure to include $CAFFE_ROOT/python to your PYTHONPATH.
-  make py
-  make test -j8
-  # (Optional)
-  make runtest -j8
-  ```
 
-3. Download our pre-trained model from [GoogleDrive](https://drive.google.com/open?id=1CboBIsjcDQ-FC1rMES6IjTl6sYQDoD6u) or [BaiduYun](https://pan.baidu.com/s/1nvoW1wH), and merge it with the folder `$SFD_ROOT/models`.
+# 安装opencv3.3.0-python
+# 参考bmi安装opencv3过程：
+# http://gitlab.bmi/VisionAI/soft/Dockerfiles/blob/master/opencv.Dockerfile
 
-4. Download our above [sfd_test_code](https://github.com/sfzhang15/SFD/archive/master.zip) folder and put it in the `$SFD_ROOT`.
+# 安装bmi-caffe
+# 参考caffe bmi-beta分支的安装过程：
+# http://gitlab.bmi/VisionAI/soft/caffe/tree/bmi-beta
 
-5. Download [AFW](http://www.ics.uci.edu/~xzhu/face/), [PASCAL face](http://host.robots.ox.ac.uk/pascal/VOC/voc2012/index.html), [FDDB](http://vis-www.cs.umass.edu/fddb/index.html) and [WIDER FACE](http://mmlab.ie.cuhk.edu.hk/projects/WIDERFace/) datasets.
 
-6. Download the [EVALUATION TOOLBOX](https://bitbucket.org/marcopede/face-eval) for evaluation.
+
+# 克隆工程，安装python依赖库
+git clone -b bmi http://gitlab.bmi/r.li/SFD.git SFD
+cd SFD
+pip install -r requirements.txt -i  https://pypi.tuna.tsinghua.edu.cn/simple
+
+```
+
+__注：requirements.txt 未测试__
+
+### Usage
+
+* 运行demo
+
+```
+source py3venv/bin/active
+export PYTHONPATH=$CAFFE/python:$PYTHONPATH
+python demo.py videofile.mp4
+
+# 处理图片
+python demo.py $images_folder
+```
+
+* 引入其他工程
+
+```python
+import sys
+sys.path.append("./core")
+from sfd import SFD
+
+# 人脸检测
+sfd = SFD(model_def="./data/SFD_deploy.prototxt",
+          model_weights="./data/SFD_weights.caffemodel",
+          img_max_side=480.0,
+          conf_thresh=0.8,
+          gpu_id=0)
+
+# 准备rgb图片
+
+# 检测人脸
+dets = sfd.detect(rgb_img)
+
+for line in dets:
+    x1, y1, x2, y2, score = line
+    print("bbox ", x1, y1, x2, y2)
+
+
+```
+更多请参考`demo.py`
+
+* combination with track
+
+参考'sfd_api.py'
 
 ### Eval
-1. Evaluate our model on AFW.
-  ```Shell
-  cd $SFD_ROOT/sfd_test_code/AFW
-  # You must modify the "Path" in the afw_test.py to your AFW path. 
-  # It will creat sfd_afw_dets.txt and put it in the EVALUATION TOOLBOX to evalute.
-  python afw_test.py
-  ```
 
-2. Evaluate our model on PASCAL face.
-  ```Shell
-  cd $SFD_ROOT/sfd_test_code/PASCAL_face
-  # You must modify the "Path" in the pascal_test.py to your PASCAL_face path. 
-  # It will creat sfd_pascal_dets.txt and put it in the EVALUATION TOOLBOX to evalute.
-  python pascal_test.py
-  ```
-
-3. Evaluate our model on FDDB.
-  ```Shell
-  cd $SFD_ROOT/sfd_test_code/FDDB
-  # You must modify the "Path" in the fddb_test.py to your FDDB path.
-  # It will creat sfd_fddb_dets.txt.
-  python fddb_test.py
-  # Fitting the dets from rectangle box to ellipse box.
-  # It will creat sfd_fddb_dets_fit.txt and put it in the FDDB evalution code to evalute.
-  cd fddb_from_rectangle_to_ellipse
-  matlab -nodesktop -nosplash -nojvm -r "run fitting.m;quit;"
-  # If you want to get the results of FDDB in our paper, you should use our 'FDDB_annotation_ellipseList_new.txt'
-  ```
-
-4. Evaluate our model on WIDER FACE.
-  ```Shell
-  cd $SFD_ROOT/sfd_test_code/WIDER_FACE
-  # You must modify the path in the wider_test.py to your WIDERFACE path. 
-  # It will creat detection results in the "eval_tools_old-version" folder.
-  python wider_test.py
-  # If you want to get the results of val set in our paper, you should use the provided "eval_tools_old-version". 
-  # Or you can use latest eval_tools of WIDER FACE.
-  # There is a slight difference between them, since the annotation used for the evaluation is slightly change around March 2017.
-  ```
-
-### Train
-
-1. Follow the intruction of SSD to create the lmdb of WIDER FACE.
-
-2. Modify the data augmentation code of SSD to make sure that it does not change the image ratio.
-
-3. Modify the anchor match code of SSD to implement the 'scale compensation anchor matching strategy'.
-
-4. Train the model.
+【todo】
+see `eval/README.md`

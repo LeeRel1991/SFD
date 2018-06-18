@@ -17,18 +17,36 @@ import cv2
 
 import time
 
-caffe_ssd_root = '/home/lirui/packages/caffe_ssd'  # this file is expected to be in {sfd_root}/sfd_test_code/AFW
 import os
 import sys
 
-sys.path.insert(0, os.path.join(caffe_ssd_root, 'python'))
-import caffe
+try:
+    import caffe
+except ImportError:
+    import traceback
+
+    traceback.print_exc()
+    print("Error: please add $CAFFE_ROOT/python into sys.path or PYTHONPATH first")
+    exit()
 
 
 class SFD:
-    def __init__(self, model_def, model_weights, conf_thresh=0.8, img_max_side=480.0, gpu_id=0):
-        caffe.set_device(gpu_id)
+    """
+    implementation of S3FD class for face detect
+    """
+
+    def __init__(self, model_def, model_weights, img_max_side=480.0, conf_thresh=0.8, gpu_id=0):
+        """
+        initialize
+        Args:
+            model_def: .prototxt
+            model_weights:  .caffemodel
+            img_max_side: 给网络输入的图像的最长边 
+            conf_thresh: 置信概率的阈值
+            gpu_id: gpu显卡号
+        """
         caffe.set_mode_gpu()
+        caffe.set_device(gpu_id)
 
         self.net = caffe.Net(model_def, model_weights, caffe.TEST)
         self.transformer = caffe.io.Transformer({'data': self.net.blobs['data'].data.shape})
@@ -40,11 +58,28 @@ class SFD:
         self.conf_thresh = conf_thresh
         self.img_max_side = img_max_side
 
-    def set_cfgs(self, conf_thresh, img_max_side):
+    def set_cfgs(self, img_max_side, conf_thresh):
+        """
+        设置相关参数， 在detect前调用
+        Args:
+            img_max_side: 给网络输入的图像的最长边 
+            conf_thresh: 置信概率的阈值
+
+        Returns:
+
+        """
         self.conf_thresh = conf_thresh
         self.img_max_side = img_max_side
 
     def detect(self, img_arr):
+        """
+        detect faces on an image
+        Args:
+            img_arr: input， np.array，rgb图像，
+
+        Returns:
+            out： 检测结果 [[x1,y1,x2,y2, confidence], ... ]
+        """
         tic = time.time()
         heigh = img_arr.shape[0]
         width = img_arr.shape[1]
@@ -84,7 +119,11 @@ class SFD:
         detections_out[:, (2, 4)] *= heigh
 
         # print("total time: ", time.time() - tic)
-        return detections_out
+        # [score, x1,y1,x2,y2] -> [x1,y1,x2,y2, score]
+        a = detections_out[:, 1:]
+        b = detections_out[:, 0]
+        out = np.hstack((a, b.reshape(a.shape[0], 1)))
+        return out
 
     def detect_batch(self, imgs):
         pass
