@@ -24,8 +24,8 @@ import os
 # os.chdir(caffe_ssd_root)
 import sys
 
-sys.path.append("./core")
-from sfd import SFD
+
+from sfd.sfd import SFD
 
 # caffe.set_mode_cpu()
 sfd = SFD("./data/SFD_deploy.prototxt",
