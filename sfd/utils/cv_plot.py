@@ -13,7 +13,7 @@
 """
 
 import cv2
-
+import numpy as np
 
 def plot_detections(image, dets):
     """
@@ -26,11 +26,13 @@ def plot_detections(image, dets):
         
     """
     for line in dets:
-        x1, y1, x2, y2, score = line
-        # print("bbox2 ", x1, y1, x2, y2)
+        score = line[4]
+        x1, y1, x2, y2 = list(map(int, line[:4]))
+        # print("bbox ", x1, y1, x2, y2)
         cv2.rectangle(image, (x1, y1), (x2, y2), (0, 255, 0), 4)
-        cv2.putText(image, "score: {:.2f}, size: {:.2f} x {:.2f}".format(score, x2 - x1, y2 - y1), (x1, y1),
-                    cv2.FONT_HERSHEY_PLAIN, 1.2, (255, 0, 0), 2)
+        cv2.rectangle(image, (x1, y1), (x2+150, y1-20), (0, 255, 0), -1)
+        cv2.putText(image, "{} x {} @{:.2f}".format(x2 - x1, y2 - y1, score), (x1, y1),
+                    cv2.FONT_HERSHEY_PLAIN, 1.5, (255, 0, 0), 2)
 
 
 

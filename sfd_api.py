@@ -14,7 +14,7 @@
 import cv2
 import time
 import sys
-sys.path.append("./core")
+sys.path.append("./sfd")
 from sfd import SFD
 import numpy as np
 import os

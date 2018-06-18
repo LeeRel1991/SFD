@@ -24,8 +24,8 @@ import os
 # os.chdir(caffe_ssd_root)
 import sys
 
-sys.path.append("./core")
-from sfd import SFD
+
+from sfd.sfd import SFD
 
 # caffe.set_mode_cpu()
 sfd = SFD("./data/SFD_deploy.prototxt",
@@ -47,14 +47,14 @@ def handle_image(net, bgr_img):
     toc = time.time()
     print("total time: ", toc - tic)
 
-    bbox_width = dets[:, 3] - dets[:, 1]
-    bbox_height = dets[:, 4] - dets[:, 2]
+    bbox_width = dets[:, 2] - dets[:, 0]
+    bbox_height = dets[:, 3] - dets[:, 1]
 
     if len(bbox_height):
         print("min width: {:.2f}, min height: {:.2f}".format(min(bbox_width), min(bbox_height)))
 
     # ---------- optional Plot
-    from utils.cv_plot import plot_detections
+    from sfd.utils.cv_plot import plot_detections
     plot_detections(bgr_img, dets)
     cv2.imshow("out", bgr_img)
     cv2.waitKey(1)

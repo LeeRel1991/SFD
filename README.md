@@ -53,10 +53,17 @@ python demo.py $images_folder
 
 * 引入其他工程
 
+```shell
+export PYTHONPATH=$SFD_ROOT:$PYTHONPATH
+
+```
+
+
 ```python
 import sys
-sys.path.append("./core")
-from sfd import SFD
+
+# 确保工程路径已添加至sys.path 或PYTHONPATH环境变量
+from sfd.sfd import SFD
 
 # 人脸检测
 sfd = SFD(model_def="./data/SFD_deploy.prototxt",
