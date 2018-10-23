@@ -93,3 +93,10 @@ for line in dets:
 
 【todo】
 see `eval/README.md`
+
+### 可视化
+
+* 绘制网络结构图
+```shell
+python  $CAFFE_ROOT/python/draw_net.py data/SFD_deploy.prototxt sfd_net.jpg --rankdir TB
+```

@@ -2,3 +2,5 @@
 *.pyc
 *.txt
 sfd_models.zip
+SFDCXX/
+models/
