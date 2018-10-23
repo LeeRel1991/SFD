@@ -18,6 +18,8 @@ import cv2
 import time
 
 import os
+os.environ['GLOG_minloglevel'] = '2'
+
 import sys
 
 try:
